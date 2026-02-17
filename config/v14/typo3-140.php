@@ -25,6 +25,7 @@ use Ssch\TYPO3Rector\TYPO314\v0\MigrateCopyRelatedDataHandlerPropertiesRector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateCoreTcaAndUserSettingsShowitemStringsToShortFormReferencesRector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateDataHandlerPropertiesUserIdAndAdminRector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateEnvironmentGetComposerRootPathRector;
+use Ssch\TYPO3Rector\TYPO314\v0\MigrateEvaluateConditionToVerdictInAbstractConditionViewHelperRector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateFileCollectionRegistryAddTypeToTCARector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateGeneralUtilityCreateVersionNumberedFilenameRector;
 use Ssch\TYPO3Rector\TYPO314\v0\MigrateIpAnonymizationTaskRector;
@@ -154,4 +155,5 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(UseRecordApiInListModuleRector::class);
     $rectorConfig->rule(UseStrongerCryptographicAlgorithmForHMACRector::class);
     $rectorConfig->rule(IntroduceStrictTypingForCacheBeAndFeRector::class);
+    $rectorConfig->rule(MigrateEvaluateConditionToVerdictInAbstractConditionViewHelperRector::class);
 };
