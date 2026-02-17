@@ -8,11 +8,11 @@ use PhpParser\Modifiers;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PHPStan\Type\ObjectType;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\Contract\DocumentedRuleInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -67,28 +67,45 @@ CODE_SAMPLE
         return [Class_::class];
     }
 
+    private const ABSTRACT_CONDITION_VIEW_HELPER_CLASSES = [
+        'TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper',
+        'TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionViewHelper',
+    ];
+
     /**
      * @param Class_ $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (! $this->isObjectType($node, new ObjectType('TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper'))
-            && ! $this->isObjectType(
-                $node,
-                new ObjectType('TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionViewHelper')
-            )
-        ) {
+        $className = $node->name?->toString() ?? 'anonymous';
+
+        if (! $node->extends instanceof Name) {
+            echo "[DEBUG] {$className}: No extends clause\n";
             return null;
         }
 
-        $evaluateConditionMethod = $node->getMethod('evaluateCondition');
-        if (! $evaluateConditionMethod instanceof ClassMethod) {
+        $extendsName = $this->getName($node->extends);
+        echo "[DEBUG] {$className} extends {$extendsName}\n";
+
+        if (! $this->isNames($node->extends, self::ABSTRACT_CONDITION_VIEW_HELPER_CLASSES)) {
+            echo "[DEBUG] {$className}: Does not extend AbstractConditionViewHelper\n";
             return null;
         }
+
+        echo "[DEBUG] {$className}: Extends AbstractConditionViewHelper - checking for evaluateCondition()\n";
+
+        $evaluateConditionMethod = $node->getMethod('evaluateCondition');
+        if (! $evaluateConditionMethod instanceof ClassMethod) {
+            echo "[DEBUG] {$className}: No evaluateCondition() method found\n";
+            return null;
+        }
+
+        echo "[DEBUG] {$className}: Found evaluateCondition() - will migrate to verdict()!\n";
 
         // Check if verdict() method already exists
         $verdictMethod = $node->getMethod('verdict');
         if ($verdictMethod instanceof ClassMethod) {
+            echo "[DEBUG] {$className}: verdict() already exists - removing evaluateCondition()\n";
             // verdict() already exists, just remove evaluateCondition()
             foreach ($node->stmts as $key => $stmt) {
                 if ($stmt === $evaluateConditionMethod) {
